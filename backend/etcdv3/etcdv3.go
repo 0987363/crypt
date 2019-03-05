@@ -94,26 +94,9 @@ func (c *Client) WatchWithContext(ctx context.Context, key string, stop chan boo
 		rch := c.client.Watch(ctx, key, goetcd.WithPrefix())
 		for wresp := range rch {
 			for _, ev := range wresp.Events {
-				fmt.Printf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
-
 				respChan <- &backend.Response{[]byte(ev.Kv.Value), nil}
 			}
 		}
-
-		/*
-			for {
-				var resp *goetcd.Response
-				var err error
-				resp, err = watcher.Next(ctx)
-				if err != nil {
-					respChan <- &backend.Response{nil, err}
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				c.waitIndex = resp.Node.ModifiedIndex
-				respChan <- &backend.Response{[]byte(resp.Node.Value), nil}
-			}
-		*/
 	}()
 	return respChan
 }
