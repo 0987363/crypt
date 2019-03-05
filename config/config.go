@@ -5,10 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/xordataexchange/crypt/backend"
-	"github.com/xordataexchange/crypt/backend/consul"
-	"github.com/xordataexchange/crypt/backend/etcd"
-	"github.com/xordataexchange/crypt/encoding/secconf"
+	"github.com/0987363/crypt/backend"
+	"github.com/0987363/crypt/backend/consul"
+	"github.com/0987363/crypt/backend/etcd"
+	"github.com/0987363/crypt/backend/etcdv3"
+	"github.com/0987363/crypt/encoding/secconf"
 )
 
 type KVPair struct {
@@ -46,6 +47,16 @@ func NewConfigManager(client backend.Store, keystore io.Reader) (ConfigManager, 
 	return configManager{bytes, client}, nil
 }
 
+// NewStandardEtcdv3ConfigManager returns a new ConfigManager backed by etcd.
+func NewStandardEtcdv3ConfigManager(machines []string) (ConfigManager, error) {
+	store, err := etcdv3.New(machines)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewStandardConfigManager(store)
+}
+
 // NewStandardEtcdConfigManager returns a new ConfigManager backed by etcd.
 func NewStandardEtcdConfigManager(machines []string) (ConfigManager, error) {
 	store, err := etcd.New(machines)
@@ -69,6 +80,16 @@ func NewStandardConsulConfigManager(machines []string) (ConfigManager, error) {
 // Data will be encrypted.
 func NewEtcdConfigManager(machines []string, keystore io.Reader) (ConfigManager, error) {
 	store, err := etcd.New(machines)
+	if err != nil {
+		return nil, err
+	}
+	return NewConfigManager(store, keystore)
+}
+
+// NewEtcdv3ConfigManager returns a new ConfigManager backed by etcdv3.
+// Data will be encrypted.
+func NewEtcdv3ConfigManager(machines []string, keystore io.Reader) (ConfigManager, error) {
+	store, err := etcdv3.New(machines)
 	if err != nil {
 		return nil, err
 	}

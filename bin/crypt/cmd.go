@@ -8,10 +8,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/xordataexchange/crypt/backend"
-	"github.com/xordataexchange/crypt/backend/consul"
-	"github.com/xordataexchange/crypt/backend/etcd"
-	"github.com/xordataexchange/crypt/encoding/secconf"
+	"github.com/0987363/crypt/backend"
+	"github.com/0987363/crypt/backend/consul"
+	"github.com/0987363/crypt/backend/etcd"
+	"github.com/0987363/crypt/backend/etcdv3"
+	"github.com/0987363/crypt/encoding/secconf"
 )
 
 func getCmd(flagset *flag.FlagSet) {
@@ -38,12 +39,13 @@ func getCmd(flagset *flag.FlagSet) {
 		fmt.Printf("%s\n", value)
 		return
 	}
-	value, err := getEncrypted(key, secretKeyring, backendStore)
-
-	if err != nil {
-		log.Fatal(err)
+	if secretKeyring != "" {
+		value, err := getEncrypted(key, secretKeyring, backendStore)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", value)
 	}
-	fmt.Printf("%s\n", value)
 }
 
 func getEncrypted(key, keyring string, store backend.Store) ([]byte, error) {
@@ -207,12 +209,16 @@ func getBackendStore(provider string, endpoint string) (backend.Store, error) {
 			endpoint = "127.0.0.1:8500"
 		case "etcd":
 			endpoint = "http://127.0.0.1:4001"
+		case "etcdv3":
+			endpoint = "http://192.168.88.16:2379"
 		}
 	}
 	machines := []string{endpoint}
 	switch provider {
 	case "etcd":
 		return etcd.New(machines)
+	case "etcdv3":
+		return etcdv3.New(machines)
 	case "consul":
 		return consul.New(machines)
 	default:
